@@ -1,4 +1,4 @@
-package com.nickdieda.smartstudy.ui.theme
+package com.nickdieda.smartstudy.presentation.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
