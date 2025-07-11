@@ -8,6 +8,7 @@ import com.nickdieda.smartstudy.presentation.dashboard.DashboardScreen
 import com.nickdieda.smartstudy.presentation.domain.model.Session
 import com.nickdieda.smartstudy.presentation.domain.model.Subject
 import com.nickdieda.smartstudy.presentation.domain.model.Task
+import com.nickdieda.smartstudy.presentation.session.SessionScreen
 import com.nickdieda.smartstudy.presentation.subject.SubjectScreen
 import com.nickdieda.smartstudy.presentation.task.TaskScreen
 import com.nickdieda.smartstudy.presentation.theme.SmartStudyTheme
@@ -20,7 +21,8 @@ class MainActivity : ComponentActivity() {
             SmartStudyTheme {
 //                DashboardScreen()
 //                SubjectScreen()
-                TaskScreen()
+//                TaskScreen()
+                SessionScreen()
             }
             }
         }

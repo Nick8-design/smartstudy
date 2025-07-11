@@ -59,7 +59,7 @@ import java.time.ZonedDateTime
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskScreen() {
-    val scope = rememberCoroutineScope()
+
 
 
     var title by remember { mutableStateOf("") }
@@ -80,7 +80,7 @@ fun TaskScreen() {
             }
         }
     )
-
+    val scope = rememberCoroutineScope()
     var isBottomSheetDialogOpen by remember { mutableStateOf(false) }
     val sheetState= rememberModalBottomSheetState()
 
