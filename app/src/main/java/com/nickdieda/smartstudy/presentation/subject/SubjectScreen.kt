@@ -45,13 +45,54 @@ import com.nickdieda.smartstudy.presentation.component.CountCard
 import com.nickdieda.smartstudy.presentation.component.DeleteDialog
 import com.nickdieda.smartstudy.presentation.component.studySessionsList
 import com.nickdieda.smartstudy.presentation.component.tasksList
+import com.nickdieda.smartstudy.presentation.destinations.TaskScreenRouteDestination
+import com.nickdieda.smartstudy.presentation.destinations.TaskScreenRouteDestination.invoke
 import com.nickdieda.smartstudy.presentation.domain.model.Subject
+import com.nickdieda.smartstudy.presentation.task.TaskScreenNavArgs
+
 import com.nickdieda.smartstudy.sessions
 import com.nickdieda.smartstudy.tasks
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+
+
+data class SubjectScreenNavArgs(
+  val  subjectsId:Int
+)
+
+
+
+@Destination(navArgsDelegate = SubjectScreenNavArgs::class)
+@Composable
+fun SubjectScreenRoute(navigator: DestinationsNavigator) {
+    SubjectScreen(
+        onBackButtonClick = {
+            navigator.navigateUp()
+        },
+        onTaskButtonClick = {
+
+            val navArg= TaskScreenNavArgs(taskId=null, subjectId = -1)
+            navigator.navigate(TaskScreenRouteDestination(navArgs = navArg))
+
+        },
+        onTaskCardClick = { taskId->
+
+            val navArg= TaskScreenNavArgs(taskId=taskId, subjectId = null)
+            navigator.navigate(TaskScreenRouteDestination(navArgs = navArg))
+
+        }
+    )
+
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SubjectScreen() {
+private fun SubjectScreen(
+    onBackButtonClick: () -> Unit,
+    onTaskButtonClick:()->Unit,
+    onTaskCardClick:(Int?)->Unit
+) {
 
    var  isDeleteSubjectDialogOpen by rememberSaveable { mutableStateOf(false) }
     var isDeleteDialogOpen by rememberSaveable { mutableStateOf(false) }
@@ -110,7 +151,7 @@ Scaffold(
 
             SubjectScreenTopBar(
                 title = "Geography",
-                onBackButtonClick = {},
+                onBackButtonClick = onBackButtonClick,
                 onDeleteButtonClick = {isDeleteSubjectDialogOpen=true},
                 onEditButtonClick = {isEditSubjectDialogOpen=true },
                 scrollBehavior = scrollBehavior
@@ -118,7 +159,7 @@ Scaffold(
     },
     floatingActionButton = {
         ExtendedFloatingActionButton(
-            onClick = {},
+            onClick =  onTaskButtonClick ,
             icon = {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -153,7 +194,7 @@ Scaffold(
             emptyListText = "You don't have any upcoming tasks.\nClick the + to add new task.",
             tasks = tasks,
             onCheckBoxClick = {},
-            onTaskCardClicked = {}
+            onTaskCardClicked =onTaskCardClick
 
         )
         item{
@@ -166,7 +207,7 @@ Scaffold(
             emptyListText = "You don't have any complete tasks.\nClick the check box on the completion of the task.",
             tasks = tasks,
             onCheckBoxClick = {},
-            onTaskCardClicked = {}
+            onTaskCardClicked =onTaskCardClick
 
         )
         item{

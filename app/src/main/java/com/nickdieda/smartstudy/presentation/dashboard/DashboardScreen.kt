@@ -44,15 +44,59 @@ import com.nickdieda.smartstudy.presentation.component.DeleteDialog
 import com.nickdieda.smartstudy.presentation.component.SubjectCard
 import com.nickdieda.smartstudy.presentation.component.studySessionsList
 import com.nickdieda.smartstudy.presentation.component.tasksList
+import com.nickdieda.smartstudy.presentation.destinations.SessionScreenRouteDestination
+import com.nickdieda.smartstudy.presentation.destinations.SubjectScreenRouteDestination
+import com.nickdieda.smartstudy.presentation.destinations.TaskScreenRouteDestination
 import com.nickdieda.smartstudy.presentation.domain.model.Session
 import com.nickdieda.smartstudy.presentation.domain.model.Subject
 import com.nickdieda.smartstudy.presentation.domain.model.Task
+import com.nickdieda.smartstudy.presentation.subject.SubjectScreenNavArgs
+import com.nickdieda.smartstudy.presentation.task.TaskScreenNavArgs
 import com.nickdieda.smartstudy.sessions
 import com.nickdieda.smartstudy.subjects
 import com.nickdieda.smartstudy.tasks
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+
+@Destination(start = true)
+@Composable
+fun DashboardScreenRoute(
+    navigator: DestinationsNavigator
+) {
+
+
+DashboardScreen(
+    onSubjectCardClick={subjectId->
+        subjectId?.let{
+            val navArg= SubjectScreenNavArgs(subjectId)
+            navigator.navigate(SubjectScreenRouteDestination(navArgs = navArg))
+        }
+
+    },
+    onTaskCardClick={
+            taskId->
+
+            val navArg= TaskScreenNavArgs(taskId=taskId, subjectId = null)
+            navigator.navigate(TaskScreenRouteDestination(navArgs = navArg))
+
+    },
+    onStarterSessionButtonClick={
+        navigator.navigate(SessionScreenRouteDestination)
+    }
+)
+
+}
+
+
+
 
 @Composable
-fun DashboardScreen() {
+private fun DashboardScreen(
+
+    onSubjectCardClick:(Int?)->Unit,
+    onTaskCardClick:(Int?)->Unit,
+    onStarterSessionButtonClick:()->Unit
+) {
 
 
 
@@ -117,16 +161,17 @@ item {
                     subjectList = subjects,
                     onAddIconClicked = {
                         isAddSubjectDialogOpen=true
-                    }
+                    },
+                    onSubjectCardClick=onSubjectCardClick
                 )
             }
 
 
             item {
                 Button(
-                    onClick = {},
+                    onClick = onStarterSessionButtonClick,
                     modifier = Modifier
-                        .padding(48.dp,20.dp)
+                        .padding(48.dp, 20.dp)
                         .fillMaxWidth()
                 ) {
                     Text("Start Study Session")
@@ -138,7 +183,7 @@ item {
                 emptyListText = "You don't have any upcomming tasks.\nClick the + to add new task.",
                 tasks = tasks,
                 onCheckBoxClick = {},
-                onTaskCardClicked = {}
+                onTaskCardClicked = onTaskCardClick
 
             )
             item{
@@ -211,7 +256,8 @@ fun SubjectCardSection(
     modifier: Modifier,
     subjectList: List<Subject>,
     onAddIconClicked:()->Unit,
-    emptyListText:String="You don't have any subjects. \nClick the + button to add new subject."
+    emptyListText:String="You don't have any subjects. \nClick the + button to add new subject.",
+    onSubjectCardClick: (Int?) -> Unit
 ) {
 
     Column(modifier=modifier) {
@@ -269,9 +315,7 @@ fun SubjectCardSection(
                 SubjectCard(
                     subjectName = subject.name,
                     gradientColor = subject.colors,
-                    onClick = {
-//                        Toast.makeText(conte,"Coming soon ",Toast.LENGTH_SHORT)
-                    }
+                    onClick = { onSubjectCardClick(subject.subjectId) }
                 )
 
             }

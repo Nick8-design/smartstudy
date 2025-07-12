@@ -4,14 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.nickdieda.smartstudy.presentation.dashboard.DashboardScreen
+import com.nickdieda.smartstudy.presentation.NavGraphs
+
 import com.nickdieda.smartstudy.presentation.domain.model.Session
 import com.nickdieda.smartstudy.presentation.domain.model.Subject
 import com.nickdieda.smartstudy.presentation.domain.model.Task
-import com.nickdieda.smartstudy.presentation.session.SessionScreen
-import com.nickdieda.smartstudy.presentation.subject.SubjectScreen
-import com.nickdieda.smartstudy.presentation.task.TaskScreen
+
 import com.nickdieda.smartstudy.presentation.theme.SmartStudyTheme
+import com.ramcosta.composedestinations.DestinationsNavHost
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,14 +20,21 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SmartStudyTheme {
-//                DashboardScreen()
-//                SubjectScreen()
-//                TaskScreen()
-                SessionScreen()
+                DestinationsNavHost(navGraph = NavGraphs.root)
+
             }
             }
         }
     }
+
+
+
+
+
+
+
+
+
 
 val subjects=listOf(
     Subject(name = "English", goalHours = 10f, colors = Subject.subjectColors[0], subjectId = 0),

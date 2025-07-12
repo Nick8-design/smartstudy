@@ -47,18 +47,40 @@ import com.nickdieda.smartstudy.presentation.component.DeleteDialog
 import com.nickdieda.smartstudy.presentation.component.SubjectListBottomSheet
 import com.nickdieda.smartstudy.presentation.component.TaskCheckBox
 import com.nickdieda.smartstudy.presentation.component.TaskDatePicker
+
 import com.nickdieda.smartstudy.presentation.theme.Red
 import com.nickdieda.smartstudy.subjects
 import com.nickdieda.smartstudy.util.Priority
 import com.nickdieda.smartstudy.util.changeMillisDateString
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZonedDateTime
 
+data class TaskScreenNavArgs(
+    val taskId:Int?,
+    val subjectId:Int?
+)
+
+@Destination(navArgsDelegate = TaskScreenNavArgs::class)
+@Composable
+fun TaskScreenRoute(nav: DestinationsNavigator) {
+    TaskScreen(
+        onBackButtonClick = {
+            nav.navigateUp()
+        }
+    )
+
+}
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskScreen() {
+private fun TaskScreen(
+    onBackButtonClick: () -> Unit
+) {
 
 
 
@@ -131,7 +153,7 @@ DeleteDialog(
                 isTaskExist = true,
                 isComplete = false,
                 checkBorderColor = Red,
-                onBackButtonClick = {},
+                onBackButtonClick = onBackButtonClick,
                 onDeleteButtonClick = {isDeleteDialogOpen=true},
                 onCheckBoxClick = {}
             )

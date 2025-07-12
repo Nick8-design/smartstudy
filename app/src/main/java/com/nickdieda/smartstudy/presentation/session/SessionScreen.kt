@@ -40,13 +40,30 @@ import androidx.compose.ui.unit.sp
 import com.nickdieda.smartstudy.presentation.component.DeleteDialog
 import com.nickdieda.smartstudy.presentation.component.SubjectListBottomSheet
 import com.nickdieda.smartstudy.presentation.component.studySessionsList
+
 import com.nickdieda.smartstudy.sessions
 import com.nickdieda.smartstudy.subjects
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
+
+
+
+@Destination
+@Composable
+fun SessionScreenRoute(nav: DestinationsNavigator) {
+    SessionScreen(
+        onBackButtonClick = {
+nav.navigateUp()
+        }
+    )
+
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SessionScreen() {
+private fun SessionScreen(onBackButtonClick: () -> Unit) {
 
     val scope = rememberCoroutineScope()
     var isBottomSheetDialogOpen by remember { mutableStateOf(false) }
@@ -80,7 +97,7 @@ fun SessionScreen() {
     )
 
     Scaffold (
-        topBar = { SessionScreenTopBar (onBackButtonClick = {})}
+        topBar = { SessionScreenTopBar (onBackButtonClick = onBackButtonClick)}
     ){ paddingValues ->
 
         LazyColumn(
