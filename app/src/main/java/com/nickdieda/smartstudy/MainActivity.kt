@@ -12,8 +12,9 @@ import com.nickdieda.smartstudy.presentation.domain.model.Task
 
 import com.nickdieda.smartstudy.presentation.theme.SmartStudyTheme
 import com.ramcosta.composedestinations.DestinationsNavHost
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

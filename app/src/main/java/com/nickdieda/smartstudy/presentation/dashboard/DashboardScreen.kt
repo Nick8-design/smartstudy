@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.nickdieda.smartstudy.R
 import com.nickdieda.smartstudy.presentation.component.AddSubjectDialog
 import com.nickdieda.smartstudy.presentation.component.CountCard
@@ -64,6 +65,7 @@ fun DashboardScreenRoute(
     navigator: DestinationsNavigator
 ) {
 
+    val viewModel: DashboardViewModel= hiltViewModel()
 
 DashboardScreen(
     onSubjectCardClick={subjectId->
