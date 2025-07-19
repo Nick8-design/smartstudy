@@ -3,7 +3,9 @@ package com.nickdieda.smartstudy.presentation.domain.data.repository
 import com.nickdieda.smartstudy.presentation.domain.data.local.TaskDao
 import com.nickdieda.smartstudy.presentation.domain.model.Task
 import com.nickdieda.smartstudy.presentation.domain.repository.TaskRepository
+import com.nickdieda.smartstudy.tasks
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class TaskRepositoryImp @Inject constructor(
@@ -30,6 +32,18 @@ class TaskRepositoryImp @Inject constructor(
     }
 
     override fun getAllTasks(): Flow<List<Task>> {
-        TODO("Not yet implemented")
+       return  taskDao.getAllTasks()
+           .map{
+               tasks->tasks.filter{it.isComplete.not()}
+
+           }
+           .map { tasks->sortTasks(tasks) }
+    }
+    private fun sortTasks(tasks:List<Task>):    List<Task>  {
+        return  tasks.sortedWith (
+            compareBy<Task>{
+                it.dueDate
+            }.thenByDescending { it.priority }
+        )
     }
 }

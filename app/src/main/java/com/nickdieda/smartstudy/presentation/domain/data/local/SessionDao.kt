@@ -13,8 +13,9 @@ interface SessionDao {
     @Insert
     suspend fun  insertSession(session: Session)
 
+
     @Delete
-    suspend fun deleteSession(sessionId: Int)
+    suspend fun deleteSession(session: Session)
 
     @Query("SELECT * FROM Session")
     fun getAllSssions(): Flow<List<Session>>

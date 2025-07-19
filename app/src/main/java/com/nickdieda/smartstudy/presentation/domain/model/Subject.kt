@@ -14,7 +14,7 @@ data class Subject(
 
     val name:String,
     val goalHours:Float,
-    val colors:List<Color>,
+    val colors:List<Int>,
 
     @PrimaryKey(true)
     val subjectId:Int?=null

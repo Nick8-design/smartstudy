@@ -4,6 +4,8 @@ import com.nickdieda.smartstudy.presentation.domain.repository.SessionRepository
 import com.nickdieda.smartstudy.presentation.domain.data.local.SessionDao
 import com.nickdieda.smartstudy.presentation.domain.model.Session
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.take
 import javax.inject.Inject
 
 class SessionRepositoryImp @Inject constructor(
@@ -18,7 +20,7 @@ class SessionRepositoryImp @Inject constructor(
     }
 
     override fun getAllSssions(): Flow<List<Session>> {
-        TODO("Not yet implemented")
+       return sessionDao.getAllSssions().take(5)
     }
 
     override fun getSessionsForSubject(subjectId: Int): Flow<List<Session>> {
@@ -26,7 +28,7 @@ class SessionRepositoryImp @Inject constructor(
     }
 
     override fun getTotalSessionDuration(): Flow<Long> {
-        TODO("Not yet implemented")
+      return  sessionDao.getTotalSessionDuration()
     }
 
     override fun getTotalSessionDurationBySubjectId(subjectId: Int): Flow<Long> {
