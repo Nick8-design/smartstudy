@@ -41,11 +41,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nickdieda.smartstudy.presentation.component.AddSubjectDialog
 import com.nickdieda.smartstudy.presentation.component.CountCard
 import com.nickdieda.smartstudy.presentation.component.DeleteDialog
 import com.nickdieda.smartstudy.presentation.component.studySessionsList
 import com.nickdieda.smartstudy.presentation.component.tasksList
+import com.nickdieda.smartstudy.presentation.dashboard.DashboardEvent
 import com.nickdieda.smartstudy.presentation.destinations.TaskScreenRouteDestination
 import com.nickdieda.smartstudy.presentation.destinations.TaskScreenRouteDestination.invoke
 import com.nickdieda.smartstudy.presentation.domain.model.Subject
@@ -67,8 +69,12 @@ data class SubjectScreenNavArgs(
 @Composable
 fun SubjectScreenRoute(navigator: DestinationsNavigator) {
     val viewModel: SubjectViewModel= hiltViewModel()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
 
     SubjectScreen(
+        state = state,
+        onEvent= viewModel::onEvent,
         onBackButtonClick = {
             navigator.navigateUp()
         },
@@ -92,6 +98,8 @@ fun SubjectScreenRoute(navigator: DestinationsNavigator) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SubjectScreen(
+    onEvent: (SubjectEvent)->Unit,
+    state: SubjectState,
     onBackButtonClick: () -> Unit,
     onTaskButtonClick:()->Unit,
     onTaskCardClick:(Int?)->Unit
@@ -100,9 +108,9 @@ private fun SubjectScreen(
    var  isDeleteSubjectDialogOpen by rememberSaveable { mutableStateOf(false) }
     var isDeleteDialogOpen by rememberSaveable { mutableStateOf(false) }
     var isEditSubjectDialogOpen by rememberSaveable { mutableStateOf(false) }
-    var subjectName by remember { mutableStateOf("") }
-    var getHours by remember { mutableStateOf("") }
-    var selectedColors by remember { mutableStateOf(Subject.subjectColors.random()) }
+//    var subjectName by remember { mutableStateOf("") }
+//    var getHours by remember { mutableStateOf("") }
+//    var selectedColors by remember { mutableStateOf(Subject.subjectColors.random()) }
 
     AddSubjectDialog(
         isOpen = isEditSubjectDialogOpen,
@@ -112,12 +120,12 @@ private fun SubjectScreen(
             isEditSubjectDialogOpen = false
         },
 
-        selectedColors = selectedColors,
-        onColorChange ={selectedColors=it},
-        subjectName =subjectName,
-        goalHours = getHours,
-        onSubjectNameChange = {subjectName=it},
-        onGoalHourChange ={getHours=it},
+        selectedColors = state.subjectCardColors,
+        onColorChange ={onEvent(SubjectEvent.onSubjectCardColorChange(it))},
+        subjectName =state.subjectName,
+        goalHours = state.goalStudyHours,
+        onSubjectNameChange = {onEvent(SubjectEvent.onSubjectNameChange(it))},
+        onGoalHourChange ={onEvent(SubjectEvent.onGoalStudyHoursChange(it))},
     )
 
 
@@ -126,7 +134,9 @@ private fun SubjectScreen(
         title = "Delete Session?",
         bodyText = "Are you sure you want to delete this session? Your studied hour will be reduced by this session time. This action can not be undone",
         onDismissRequest = {isDeleteDialogOpen=false},
-        onConfirmButtonClick = {isDeleteDialogOpen=false},
+        onConfirmButtonClick = {
+            onEvent(SubjectEvent.DeleteSession)
+            isDeleteDialogOpen=false},
     )
 
     DeleteDialog(
@@ -134,7 +144,9 @@ private fun SubjectScreen(
         title = "Delete Subject?",
         bodyText = "Are you sure you want to delete this subject? All related tasks and study sessions will be permanently removed. This action can not be undone",
         onDismissRequest = {isDeleteSubjectDialogOpen=false},
-        onConfirmButtonClick = {isDeleteSubjectDialogOpen=false},
+        onConfirmButtonClick = {
+            onEvent(SubjectEvent.DeleteSubject)
+            isDeleteSubjectDialogOpen=false},
     )
 
 
@@ -153,7 +165,7 @@ Scaffold(
     topBar = {
 
             SubjectScreenTopBar(
-                title = "Geography",
+                title = state.subjectName,
                 onBackButtonClick = onBackButtonClick,
                 onDeleteButtonClick = {isDeleteSubjectDialogOpen=true},
                 onEditButtonClick = {isEditSubjectDialogOpen=true },
@@ -187,16 +199,16 @@ Scaffold(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(12.dp),
-                studiedHours = "10",
-                goalHours = "15",
-                progress = 0.75f
+                studiedHours = state.studiedHours.toString(),
+                goalHours = state.goalStudyHours,
+                progress = state.progress
             )
         }
         tasksList(
             sectionTitle = "UPCOMING TASKS",
             emptyListText = "You don't have any upcoming tasks.\nClick the + to add new task.",
-            tasks = tasks,
-            onCheckBoxClick = {},
+            tasks = state.upcomingTasks,
+            onCheckBoxClick = {onEvent(SubjectEvent.onTaskIsCompleteChange(it))},
             onTaskCardClicked =onTaskCardClick
 
         )
@@ -208,8 +220,8 @@ Scaffold(
         tasksList(
             sectionTitle = "COMPLETE TASKS",
             emptyListText = "You don't have any complete tasks.\nClick the check box on the completion of the task.",
-            tasks = tasks,
-            onCheckBoxClick = {},
+            tasks = state.upcomingTasks,
+            onCheckBoxClick = {onEvent(SubjectEvent.onTaskIsCompleteChange(it))},
             onTaskCardClicked =onTaskCardClick
 
         )
@@ -225,7 +237,9 @@ Scaffold(
         studySessionsList(
             sectionTitle = "RECENT STUDY SESSIONS",
             sessions = sessions,
-            onDeleteIconClick = {isDeleteDialogOpen=true},
+            onDeleteIconClick = {
+                onEvent(SubjectEvent.onDeleteSessionButtonClick(it))
+                isDeleteDialogOpen=true},
             emptyListText ="You don't have any recent study sessions.\nStart a s study session to begin recording your progress."
         )
 

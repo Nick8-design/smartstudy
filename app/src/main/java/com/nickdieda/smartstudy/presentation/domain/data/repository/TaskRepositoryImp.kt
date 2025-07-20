@@ -3,7 +3,6 @@ package com.nickdieda.smartstudy.presentation.domain.data.repository
 import com.nickdieda.smartstudy.presentation.domain.data.local.TaskDao
 import com.nickdieda.smartstudy.presentation.domain.model.Task
 import com.nickdieda.smartstudy.presentation.domain.repository.TaskRepository
-import com.nickdieda.smartstudy.tasks
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -23,11 +22,18 @@ class TaskRepositoryImp @Inject constructor(
         TODO("Not yet implemented")
     }
 
+
+
+
     override suspend fun getTaskById(taskId: Int) {
         TODO("Not yet implemented")
     }
 
-    override fun getTasksForSubject(subjectId: Int): Flow<List<Task>> {
+    override fun getCompletedTasksForSubject(subjectId: Int): Flow<List<Task>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getUpcomingTasksForSubject(subjectId: Int): Flow<List<Task>> {
         TODO("Not yet implemented")
     }
 
