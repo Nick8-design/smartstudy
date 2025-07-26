@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.nickdieda.smartstudy.R
 import com.nickdieda.smartstudy.presentation.domain.model.Task
 import com.nickdieda.smartstudy.util.Priority
+import com.nickdieda.smartstudy.util.changeMillisDateString
 
 
 fun LazyListScope.tasksList(
@@ -120,7 +121,7 @@ TaskCheckBox(
                 )
                 Spacer( modifier=Modifier.height(4.dp))
                 Text(
-                    text = "${task.dueDate}",
+                    text = task.dueDate.changeMillisDateString(),
                     style = MaterialTheme.typography.bodySmall
                 )
             }

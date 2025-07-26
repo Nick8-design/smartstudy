@@ -1,13 +1,22 @@
 package com.nickdieda.smartstudy.presentation.task
 
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nickdieda.smartstudy.presentation.domain.model.Task
 import com.nickdieda.smartstudy.presentation.domain.repository.SubjectRepository
 import com.nickdieda.smartstudy.presentation.domain.repository.TaskRepository
+import com.nickdieda.smartstudy.presentation.navArgs
+import com.nickdieda.smartstudy.tasks
+import com.nickdieda.smartstudy.util.Priority
+import com.nickdieda.smartstudy.util.SnackbarEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -18,9 +27,11 @@ import javax.inject.Inject
 @HiltViewModel
 class TaskViewModel @Inject constructor(
    private val taskRepository: TaskRepository,
-   private val subjectRepository: SubjectRepository
+   private val subjectRepository: SubjectRepository,
+    savedStateHandle: SavedStateHandle
 ): ViewModel() {
 
+    private val navArgs: TaskScreenNavArgs=savedStateHandle.navArgs()
     private val _state= MutableStateFlow(TaskState())
 
     val state= combine(
@@ -37,8 +48,13 @@ class TaskViewModel @Inject constructor(
 
     )
 
+    private  val _snackbarEventFlow= MutableSharedFlow<SnackbarEvent>()
+    val snackbarEventFlow=_snackbarEventFlow.asSharedFlow()
 
-
+init {
+    fetchTasks()
+    fetchSubject()
+}
     fun onEvent(event: TaskEvent){
         when(event){
             TaskEvent.DeleteTask -> TODO()
@@ -83,20 +99,87 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             val state=_state.value
             if (state.subjectId==null||state.relatedToSubject==null){
+
+                _snackbarEventFlow.emit(
+                    SnackbarEvent.ShowSnackbar(
+                        message = "Please select subject related to task"
+                    )
+                )
                 return@launch
             }
-            taskRepository.upsertTask(
-                task = Task(
-                    title = state.title,
-                    description = state.description,
-                    dueDate = state.dueDate?: Instant.now().toEpochMilli(),
-                    priority = state.priority.value,
-                    relatedToSubject = state.relatedToSubject,
-                    isComplete = state.isTaskComplete,
-                    taskSubjectId = state.subjectId,
-                    taskId = state.currentTaskId
+            try {
+
+
+                taskRepository.upsertTask(
+                    task = Task(
+                        title = state.title,
+                        description = state.description,
+                        dueDate = state.dueDate ?: Instant.now().toEpochMilli(),
+                        priority = state.priority.value,
+                        relatedToSubject = state.relatedToSubject,
+                        isComplete = state.isTaskComplete,
+                        taskSubjectId = state.subjectId,
+                        taskId = state.currentTaskId
+                    )
+                )
+             _snackbarEventFlow.emit(
+                    SnackbarEvent.ShowSnackbar(
+                        message = "Task saved successfully"
+                    )
+                    )
+                _snackbarEventFlow.emit(SnackbarEvent.NavigateUp)
+
+        }catch (e: Exception){
+            _snackbarEventFlow.emit(
+                SnackbarEvent.ShowSnackbar(
+                    message = "Coundnt save the task : ${e.message}",
+                    SnackbarDuration.Long
                 )
             )
         }
+
+
+
+
+        }
     }
+
+    private  fun  fetchTasks(){
+        viewModelScope.launch {
+            navArgs.taskId?.let { id->
+                taskRepository.getTaskById(id)?.let {task->
+_state.update {
+    it.copy(
+        title = task.title,
+        description = task.description,
+        dueDate = task.dueDate,
+        isTaskComplete = task.isComplete,
+        relatedToSubject = task.relatedToSubject,
+        priority = Priority.frromInt(task.priority),
+        subjectId = task.taskSubjectId,
+        currentTaskId = task.taskId
+    )
+}
+                }
+            }
+        }
+    }
+
+
+    private  fun  fetchSubject() {
+        viewModelScope.launch {
+            navArgs.subjectId?.let { id ->
+                subjectRepository.getSubjectById(id)?.let { sub->
+                    _state.update {
+                        it.copy(
+                            subjectId = sub.subjectId,
+                            relatedToSubject = sub.name
+                        )
+                    }
+                }
+
+            }
+        }
+    }
+
 }

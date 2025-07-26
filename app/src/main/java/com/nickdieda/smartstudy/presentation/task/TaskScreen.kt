@@ -28,11 +28,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,13 +52,13 @@ import com.nickdieda.smartstudy.presentation.component.DeleteDialog
 import com.nickdieda.smartstudy.presentation.component.SubjectListBottomSheet
 import com.nickdieda.smartstudy.presentation.component.TaskCheckBox
 import com.nickdieda.smartstudy.presentation.component.TaskDatePicker
-
-import com.nickdieda.smartstudy.presentation.theme.Red
-import com.nickdieda.smartstudy.subjects
 import com.nickdieda.smartstudy.util.Priority
+import com.nickdieda.smartstudy.util.SnackbarEvent
 import com.nickdieda.smartstudy.util.changeMillisDateString
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZonedDateTime
@@ -73,6 +76,7 @@ fun TaskScreenRoute(nav: DestinationsNavigator) {
     TaskScreen(
         onEvent = viewModel::onEvent,
         state=state ,
+        snackbarEvent = viewModel.snackbarEventFlow,
         onBackButtonClick = {
             nav.navigateUp()
         }
@@ -87,6 +91,7 @@ fun TaskScreenRoute(nav: DestinationsNavigator) {
 private fun TaskScreen(
     state: TaskState,
     onEvent:(TaskEvent)->Unit,
+    snackbarEvent: SharedFlow<SnackbarEvent>,
     onBackButtonClick: () -> Unit
 ) {
 
@@ -124,7 +129,26 @@ private fun TaskScreen(
 
     }
 
-DeleteDialog(
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(key1 = true) {
+        snackbarEvent.collectLatest { event ->
+            when(event){
+                is SnackbarEvent.ShowSnackbar->{
+                    snackbarHostState.showSnackbar(
+                        message = event.message,
+                        duration = event.duration
+                    )
+                }
+
+                SnackbarEvent.NavigateUp -> {onBackButtonClick()}
+            }
+
+        }
+    }
+
+
+    DeleteDialog(
     isOpen = isDeleteDialogOpen,
     title = "Delete Task?",
     bodyText = "Are you sure,you want to delete this task? \nThis action can not be undone.",
@@ -163,6 +187,8 @@ DeleteDialog(
     )
 
     Scaffold (
+
+        snackbarHost = {SnackbarHost(hostState = snackbarHostState)},
         topBar = {
             TaskScreenTopBar(
                 isTaskExist = state.currentTaskId!=null,
