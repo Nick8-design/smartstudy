@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nickdieda.smartstudy.presentation.component.DeleteDialog
 import com.nickdieda.smartstudy.presentation.component.SubjectListBottomSheet
 import com.nickdieda.smartstudy.presentation.component.TaskCheckBox
@@ -68,7 +69,10 @@ data class TaskScreenNavArgs(
 @Composable
 fun TaskScreenRoute(nav: DestinationsNavigator) {
     val viewModel: TaskViewModel= hiltViewModel()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     TaskScreen(
+        onEvent = viewModel::onEvent,
+        state=state ,
         onBackButtonClick = {
             nav.navigateUp()
         }
@@ -81,13 +85,15 @@ fun TaskScreenRoute(nav: DestinationsNavigator) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TaskScreen(
+    state: TaskState,
+    onEvent:(TaskEvent)->Unit,
     onBackButtonClick: () -> Unit
 ) {
 
 
 
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+//    var title by remember { mutableStateOf("") }
+//    var description by remember { mutableStateOf("") }
 
     var isDeleteDialogOpen by rememberSaveable { mutableStateOf(false) }
 
@@ -111,9 +117,9 @@ private fun TaskScreen(
 
 
     taskTitleError=when{
-        title.isBlank()->"Please enter task title."
-        title.length<4 ->"Task title is too short"
-        title.length>30 ->"Task title is too long."
+       state.title.isBlank()->"Please enter task title."
+        state.title.length<4 ->"Task title is too short"
+        state.title.length>30 ->"Task title is too long."
         else->null
 
     }
@@ -123,28 +129,35 @@ DeleteDialog(
     title = "Delete Task?",
     bodyText = "Are you sure,you want to delete this task? \nThis action can not be undone.",
     onDismissRequest = {isDeleteDialogOpen=false},
-    onConfirmButtonClick = {isDeleteDialogOpen=false}
+    onConfirmButtonClick = {
+        onEvent(TaskEvent.DeleteTask)
+        isDeleteDialogOpen=false}
 )
 
     TaskDatePicker(
         state = datePickerState,
         isOpen = isDatePickerDialogOpen,
         onDismissRequest = {isDatePickerDialogOpen=false},
-        onConfirmButtonClicked = { isDatePickerDialogOpen=false }
+        onConfirmButtonClicked = {
+            onEvent(TaskEvent.OnDateChange(datePickerState.selectedDateMillis))
+            isDatePickerDialogOpen=false }
     )
 
 
     SubjectListBottomSheet(
         sheetState = sheetState,
         isOpen = isBottomSheetDialogOpen,
-        subjects = subjects,
+        subjects = state.subjects,
 
-        onSubjectClicked = {
- scope.launch {
+        onSubjectClicked = {subject->
+       scope.launch {
      sheetState.hide()
  }.invokeOnCompletion {
      if(!sheetState.isVisible)isBottomSheetDialogOpen=false
+
  }
+            onEvent(TaskEvent.OnRelatedSubjectSelect(subject))
+
         },
         onDismissRequest = {isBottomSheetDialogOpen=false}
     )
@@ -152,12 +165,14 @@ DeleteDialog(
     Scaffold (
         topBar = {
             TaskScreenTopBar(
-                isTaskExist = true,
-                isComplete = false,
-                checkBorderColor = Red,
+                isTaskExist = state.currentTaskId!=null,
+                isComplete = state.isTaskComplete,
+                checkBorderColor = state.priority.color,
                 onBackButtonClick = onBackButtonClick,
                 onDeleteButtonClick = {isDeleteDialogOpen=true},
-                onCheckBoxClick = {}
+                onCheckBoxClick = {
+                    onEvent(TaskEvent.OnIsCompleteChange)
+                }
             )
         }
     ){ paddingValues ->
@@ -170,21 +185,21 @@ DeleteDialog(
         ){
 
             OutlinedTextField(
-                isError = taskTitleError!=null && title.isNotBlank(),
+                isError = taskTitleError!=null && state.title.isNotBlank(),
                 supportingText = { Text(text = taskTitleError.orEmpty()) },
                 modifier = Modifier
                     .fillMaxWidth(),
-                value = title,
+                value = state.title,
                 singleLine = true,
-                onValueChange = {title=it},
+                onValueChange = {onEvent(TaskEvent.OnTitleChange(it))},
                 label = {Text("Title")}
             )
             Spacer(modifier = Modifier.height(10.dp))
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth(),
-                value = description,
-                onValueChange = {description=it},
+                value = state.description,
+                onValueChange = {onEvent(TaskEvent.OnDescriptionChange(it))},
                 label = {Text("Description")}
             )
 
@@ -200,7 +215,7 @@ DeleteDialog(
 
                 ){
                 Text(
-                    text = datePickerState.selectedDateMillis.changeMillisDateString(),
+                    text = state.dueDate.changeMillisDateString(),
                     style = MaterialTheme.typography.bodyLarge,
 
                     )
@@ -231,13 +246,15 @@ DeleteDialog(
                         modifier = Modifier.weight(1f),
                         label =priority.title,
                         backgroundColor = priority.color,
-                        borderColor = if (priority==Priority.MEDIUM){
+                        borderColor = if (priority==state.priority){
                             Color.White
                         }else Color.Transparent,
-                        labelColor = if (priority==Priority.MEDIUM){
+                        labelColor = if (priority==state.priority){
                             Color.White
                         }else Color.White.copy(alpha  =0.7f),
-                        onClick = {}
+                        onClick = {
+                            onEvent(TaskEvent.OnPriorityChange(priority))
+                        }
                     )
 
                 }
@@ -255,14 +272,18 @@ DeleteDialog(
                 horizontalArrangement = Arrangement.SpaceBetween
 
             ){
+                val firstSubject=state.subjects.firstOrNull()?.name?:""
                 Text(
-                    text = "English",
+                    text = state.relatedToSubject?:firstSubject,
                     style = MaterialTheme.typography.bodyLarge,
 
                     )
 
                 IconButton(
-                    onClick = {isBottomSheetDialogOpen=true},
+                    onClick = {
+
+                        isBottomSheetDialogOpen=true
+                              },
                 ) {
                     Icon(Icons.Default.ArrowDropDown,
                         contentDescription = "Select subject"
@@ -276,7 +297,9 @@ DeleteDialog(
             Spacer(modifier = Modifier.height(30.dp))
             Button(
                 enabled = taskTitleError==null,
-                onClick = {},
+                onClick = {
+                    onEvent(TaskEvent.SaveTask)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 20.dp)
