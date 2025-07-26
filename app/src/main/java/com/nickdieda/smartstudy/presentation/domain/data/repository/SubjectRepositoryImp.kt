@@ -1,13 +1,20 @@
 package com.nickdieda.smartstudy.presentation.domain.data.repository
 
+import com.nickdieda.smartstudy.presentation.domain.data.local.SessionDao
 import com.nickdieda.smartstudy.presentation.domain.data.local.SubjectDao
+import com.nickdieda.smartstudy.presentation.domain.data.local.TaskDao
 import com.nickdieda.smartstudy.presentation.domain.model.Subject
 import com.nickdieda.smartstudy.presentation.domain.repository.SubjectRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class SubjectRepositoryImp @Inject constructor(
-    private val subjectDao: SubjectDao
+    private val subjectDao: SubjectDao,
+    private val taskDao: TaskDao,
+    private val sessionDao: SessionDao
+
+
+
 ): SubjectRepository {
     override suspend fun upsertSubject(subject: Subject) {
        subjectDao.upsertSubject(subject)
@@ -22,11 +29,13 @@ class SubjectRepositoryImp @Inject constructor(
     }
 
     override suspend fun getSubjectById(subjectId: Int): Subject? {
-        TODO("Not yet implemented")
+   return subjectDao.getSubjectById(subjectId)
     }
 
     override suspend fun deleteSubject(subjectId: Int) {
-        TODO("Not yet implemented")
+     taskDao.deleteTaskBySubjectId(subjectId)
+        sessionDao.deleteSessionBySubjectId(subjectId)
+        subjectDao.deleteSubject(subjectId)
     }
 
     override fun getAllSubjects(): Flow<List<Subject>> {

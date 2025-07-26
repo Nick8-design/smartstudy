@@ -136,6 +136,8 @@ resentSession:List<Session>,
                         duration = event.duration
                     )
                 }
+
+                SnackbarEvent.NavigateUp -> {}
             }
 
         }

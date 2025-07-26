@@ -24,10 +24,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,16 +50,13 @@ import com.nickdieda.smartstudy.presentation.component.CountCard
 import com.nickdieda.smartstudy.presentation.component.DeleteDialog
 import com.nickdieda.smartstudy.presentation.component.studySessionsList
 import com.nickdieda.smartstudy.presentation.component.tasksList
-import com.nickdieda.smartstudy.presentation.dashboard.DashboardEvent
 import com.nickdieda.smartstudy.presentation.destinations.TaskScreenRouteDestination
-import com.nickdieda.smartstudy.presentation.destinations.TaskScreenRouteDestination.invoke
-import com.nickdieda.smartstudy.presentation.domain.model.Subject
 import com.nickdieda.smartstudy.presentation.task.TaskScreenNavArgs
-
-import com.nickdieda.smartstudy.sessions
-import com.nickdieda.smartstudy.tasks
+import com.nickdieda.smartstudy.util.SnackbarEvent
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.collectLatest
 
 
 data class SubjectScreenNavArgs(
@@ -74,6 +74,7 @@ fun SubjectScreenRoute(navigator: DestinationsNavigator) {
 
     SubjectScreen(
         state = state,
+        snackbarEvent = viewModel.snackbarEventFlow,
         onEvent= viewModel::onEvent,
         onBackButtonClick = {
             navigator.navigateUp()
@@ -100,6 +101,7 @@ fun SubjectScreenRoute(navigator: DestinationsNavigator) {
 private fun SubjectScreen(
     onEvent: (SubjectEvent)->Unit,
     state: SubjectState,
+    snackbarEvent: SharedFlow<SnackbarEvent>,
     onBackButtonClick: () -> Unit,
     onTaskButtonClick:()->Unit,
     onTaskCardClick:(Int?)->Unit
@@ -112,11 +114,36 @@ private fun SubjectScreen(
 //    var getHours by remember { mutableStateOf("") }
 //    var selectedColors by remember { mutableStateOf(Subject.subjectColors.random()) }
 
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(key1 = true) {
+        snackbarEvent.collectLatest { event ->
+            when(event){
+                is SnackbarEvent.ShowSnackbar->{
+                    snackbarHostState.showSnackbar(
+                        message = event.message,
+                        duration = event.duration
+                    )
+                }
+
+                SnackbarEvent.NavigateUp -> onBackButtonClick()
+            }
+
+        }
+    }
+
+
+    LaunchedEffect(key2=state.goalStudyHours,key1=state.studiedHours) {
+        onEvent(SubjectEvent.UpdateProgress)
+    }
+
+
     AddSubjectDialog(
         isOpen = isEditSubjectDialogOpen,
         onDismissRequest = { isEditSubjectDialogOpen = false },
         onConfirmButtonClick = {
-
+            onEvent(SubjectEvent.UpdateSubject)
             isEditSubjectDialogOpen = false
         },
 
@@ -146,7 +173,12 @@ private fun SubjectScreen(
         onDismissRequest = {isDeleteSubjectDialogOpen=false},
         onConfirmButtonClick = {
             onEvent(SubjectEvent.DeleteSubject)
-            isDeleteSubjectDialogOpen=false},
+            isDeleteSubjectDialogOpen=false
+//            if (state.isLoading.not()){
+//                onBackButtonClick()
+//            }
+
+                               },
     )
 
 
@@ -161,14 +193,18 @@ private fun SubjectScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
 Scaffold(
+
     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    snackbarHost = {SnackbarHost(hostState = snackbarHostState)},
     topBar = {
 
             SubjectScreenTopBar(
                 title = state.subjectName,
                 onBackButtonClick = onBackButtonClick,
                 onDeleteButtonClick = {isDeleteSubjectDialogOpen=true},
-                onEditButtonClick = {isEditSubjectDialogOpen=true },
+                onEditButtonClick = {
+
+                    isEditSubjectDialogOpen=true },
                 scrollBehavior = scrollBehavior
             )
     },
@@ -236,7 +272,7 @@ Scaffold(
 
         studySessionsList(
             sectionTitle = "RECENT STUDY SESSIONS",
-            sessions = sessions,
+            sessions = state.recentSessions,
             onDeleteIconClick = {
                 onEvent(SubjectEvent.onDeleteSessionButtonClick(it))
                 isDeleteDialogOpen=true},

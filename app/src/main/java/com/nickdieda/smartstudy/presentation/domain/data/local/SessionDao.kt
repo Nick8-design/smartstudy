@@ -5,7 +5,6 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import com.nickdieda.smartstudy.presentation.domain.model.Session
-import com.nickdieda.smartstudy.presentation.domain.model.Task
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -27,7 +26,7 @@ interface SessionDao {
     fun getTotalSessionDuration(): Flow<Long>
 
     @Query("SELECT SUM(duration) FROM SESSION WHERE sessionSubjectId = :subjectId")
-    fun getTotalSessionDurationBySubjectId(subjectId:Int): Flow<Long>
+    fun getTotalSessionDurationBySubject(subjectId:Int): Flow<Long>
 
     @Query("DELETE FROM Session where sessionSubjectId = :sujectId")
     suspend fun deleteSessionBySubjectId(sujectId:Int)

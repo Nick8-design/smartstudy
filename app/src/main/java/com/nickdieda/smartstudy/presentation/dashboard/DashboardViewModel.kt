@@ -155,17 +155,19 @@ class DashboardViewModel @Inject constructor(
                         subjectCardColors = Subject.subjectColors.random()
                     )
                 }
-
+                _snackbarEventFlow.emit(
                 SnackbarEvent.ShowSnackbar(
                     message = "Subject saved successfully"
                 )
+                )
 
             }catch (e: Exception){
+                _snackbarEventFlow.emit(
                 SnackbarEvent.ShowSnackbar(
                     message = "Coundnt save the subject : ${e.message}",
                     SnackbarDuration.Long
                 )
-
+                )
             }
 
 

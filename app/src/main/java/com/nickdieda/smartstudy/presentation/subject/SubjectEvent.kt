@@ -12,6 +12,8 @@ sealed class SubjectEvent{
     data object DeleteSubject: SubjectEvent()
     data object DeleteSession: SubjectEvent()
 
+    data object UpdateProgress: SubjectEvent()
+
     data class onDeleteSessionButtonClick(val session: Session): SubjectEvent()
 
     data class onTaskIsCompleteChange(val task: Task): SubjectEvent()
