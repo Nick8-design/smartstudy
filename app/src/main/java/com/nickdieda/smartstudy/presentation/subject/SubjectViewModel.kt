@@ -8,6 +8,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nickdieda.smartstudy.presentation.domain.model.Subject
+import com.nickdieda.smartstudy.presentation.domain.model.Task
 import com.nickdieda.smartstudy.presentation.domain.repository.SessionRepository
 import com.nickdieda.smartstudy.presentation.domain.repository.SubjectRepository
 import com.nickdieda.smartstudy.presentation.domain.repository.TaskRepository
@@ -74,10 +75,10 @@ class SubjectViewModel @Inject constructor(
 
     fun onEvent(event: SubjectEvent) {
         when (event) {
-            SubjectEvent.DeleteSession -> TODO()
+            SubjectEvent.DeleteSession -> {}
             SubjectEvent.DeleteSubject -> deleteSuject()
             SubjectEvent.UpdateSubject -> updateSubject()
-            is SubjectEvent.onDeleteSessionButtonClick -> TODO()
+            is SubjectEvent.onDeleteSessionButtonClick -> {}
             is SubjectEvent.onGoalStudyHoursChange ->  {
                 _state.update {
                     it.copy(
@@ -99,7 +100,7 @@ class SubjectViewModel @Inject constructor(
                     )
                 }
             }
-            is SubjectEvent.onTaskIsCompleteChange -> TODO()
+            is SubjectEvent.onTaskIsCompleteChange -> updateTask(event.task)
             SubjectEvent.UpdateProgress -> {
                 val goalStudyHours=state.value.goalStudyHours.toFloatOrNull()?:1f
                 _state.update {
@@ -109,6 +110,49 @@ class SubjectViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun updateTask(task: Task){
+
+            viewModelScope.launch {
+
+                try {
+                    taskRepository.upsertTask(
+                        task=task.copy(isComplete = !task.isComplete)
+                    )
+                    if (task.isComplete){
+                    _snackbarEventFlow.emit(
+                        SnackbarEvent.ShowSnackbar(
+                            message = "Saved in completed tasks",
+
+                            )
+                    )
+                    }else{
+
+                        _snackbarEventFlow.emit(
+                            SnackbarEvent.ShowSnackbar(
+                                message = "Saved in upcoming tasks",
+
+                                )
+                        )
+                    }
+
+
+
+
+
+                }catch (e: Exception){
+                    _snackbarEventFlow.emit(
+                        SnackbarEvent.ShowSnackbar(
+                            message = "Coundnt update the task : ${e.message}",
+                            SnackbarDuration.Long
+                        )
+                    )
+                }
+
+
+
+            }
     }
 
     private fun updateSubject() {
@@ -177,12 +221,13 @@ class SubjectViewModel @Inject constructor(
 
 
 
+//    @SuppressLint("SuspiciousIndentation")
     private  fun deleteSuject(){
         viewModelScope.launch {
 //            _state.update { it.copy(isLoading = true) }
             try {
-                val currentSubjectId=  state.value.currentSubjectId
-                    if (currentSubjectId!=null) {
+                val currentSubjectId=  state.value.currentSubjectId;
+                if (currentSubjectId!=null) {
                         withContext(Dispatchers.IO){
                         subjectRepository.deleteSubject(subjectId = currentSubjectId)
                     }

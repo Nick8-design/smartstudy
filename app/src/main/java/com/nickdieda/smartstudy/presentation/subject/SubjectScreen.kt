@@ -81,7 +81,7 @@ fun SubjectScreenRoute(navigator: DestinationsNavigator) {
         },
         onTaskButtonClick = {
 
-            val navArg= TaskScreenNavArgs(taskId=null, subjectId = -1)
+            val navArg= TaskScreenNavArgs(taskId=null, subjectId = state.currentSubjectId)
             navigator.navigate(TaskScreenRouteDestination(navArgs = navArg))
 
         },
@@ -256,7 +256,7 @@ Scaffold(
         tasksList(
             sectionTitle = "COMPLETE TASKS",
             emptyListText = "You don't have any complete tasks.\nClick the check box on the completion of the task.",
-            tasks = state.upcomingTasks,
+            tasks = state.completedTasks,
             onCheckBoxClick = {onEvent(SubjectEvent.onTaskIsCompleteChange(it))},
             onTaskCardClicked =onTaskCardClick
 
@@ -313,7 +313,7 @@ progress:Float
         Spacer(modifier = Modifier.width(10.dp))
         CountCard(
             modifier = Modifier.weight(1f),
-            headindText = "Study Hours",
+            headindText = "Studied Hours",
             count = studiedHours
         )
         Spacer(modifier = Modifier.width(10.dp))

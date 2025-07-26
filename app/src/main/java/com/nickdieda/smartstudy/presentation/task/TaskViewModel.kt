@@ -13,6 +13,7 @@ import com.nickdieda.smartstudy.tasks
 import com.nickdieda.smartstudy.util.Priority
 import com.nickdieda.smartstudy.util.SnackbarEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import javax.inject.Inject
 
@@ -57,7 +59,7 @@ init {
 }
     fun onEvent(event: TaskEvent){
         when(event){
-            TaskEvent.DeleteTask -> TODO()
+            TaskEvent.DeleteTask -> deleteTask()
             is TaskEvent.OnDateChange -> {
                 _state.update {
                     it.copy(dueDate = event.date)
@@ -92,6 +94,42 @@ init {
                 }
             }
             TaskEvent.SaveTask -> saveTask()
+        }
+    }
+
+    private fun deleteTask() {
+        viewModelScope.launch {
+            try {
+                val currentTaskId = state.value.currentTaskId;
+                if (currentTaskId != null) {
+                    withContext(Dispatchers.IO) {
+                        taskRepository.deleteTask(currentTaskId)
+                    }
+                    _snackbarEventFlow.emit(
+                        SnackbarEvent.ShowSnackbar(
+                            message = "Task deleted successfully",
+                            SnackbarDuration.Long
+                        )
+                    )
+                    _snackbarEventFlow.emit(SnackbarEvent.NavigateUp)
+
+                } else {
+                    _snackbarEventFlow.emit(
+                        SnackbarEvent.ShowSnackbar(
+                            message = "No task to delete",
+                            SnackbarDuration.Long
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                _snackbarEventFlow.emit(
+                    SnackbarEvent.ShowSnackbar(
+                        message = "Coundn't delete the task : ${e.message}",
+                        SnackbarDuration.Long
+                    )
+                )
+
+            }
         }
     }
 

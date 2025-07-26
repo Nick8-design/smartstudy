@@ -121,17 +121,38 @@ class DashboardViewModel @Inject constructor(
                 }
             }
             is DashboardEvent.onTaskIsCompleteChange -> {
-//                _state.update {
-//                    it.copy(
-//                        task = event.task
-//                    )
-//                }
+                updateTask(event.task)
             }
         }
     }
 
+    private fun updateTask(task: Task) {
+        viewModelScope.launch {
+
+            try {
+                taskRepository.upsertTask(
+                  task=task.copy(isComplete = !task.isComplete)
+                )
+                _snackbarEventFlow.emit(
+                    SnackbarEvent.ShowSnackbar(
+                        message = "Saved in completed tasks",
+
+                        )
+                )
+
+            }catch (e: Exception){
+                _snackbarEventFlow.emit(
+                    SnackbarEvent.ShowSnackbar(
+                        message = "Coundnt update the task : ${e.message}",
+                        SnackbarDuration.Long
+                    )
+                )
+            }
 
 
+
+        }
+    }
 
 
     private fun saveSubject() {
