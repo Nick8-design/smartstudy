@@ -11,12 +11,12 @@ plugins {
 
 android {
     namespace = "com.nickdieda.smartstudy"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.nickdieda.smartstudy"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -65,7 +65,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.2")
+//    implementation( "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.9.0")
 
     //compose destination
     val destinationVersion="1.9.63"
@@ -80,14 +81,14 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
 
     //Dagger-Hilt
-    val dagger ="2.50"
+    val dagger ="2.57.1"
     implementation("com.google.dagger:hilt-android:$dagger")
     ksp("com.google.dagger:hilt-android-compiler:$dagger")
     ksp("androidx.hilt:hilt-compiler:1.2.0")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     //fonts
-    implementation("androidx.compose.ui:ui-text-google-fonts:1.8.3")
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.9.0")
 
 
     //Desugaring

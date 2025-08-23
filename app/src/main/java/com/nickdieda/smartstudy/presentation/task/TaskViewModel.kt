@@ -9,7 +9,7 @@ import com.nickdieda.smartstudy.presentation.domain.model.Task
 import com.nickdieda.smartstudy.presentation.domain.repository.SubjectRepository
 import com.nickdieda.smartstudy.presentation.domain.repository.TaskRepository
 import com.nickdieda.smartstudy.presentation.navArgs
-import com.nickdieda.smartstudy.tasks
+
 import com.nickdieda.smartstudy.util.Priority
 import com.nickdieda.smartstudy.util.SnackbarEvent
 import dagger.hilt.android.lifecycle.HiltViewModel

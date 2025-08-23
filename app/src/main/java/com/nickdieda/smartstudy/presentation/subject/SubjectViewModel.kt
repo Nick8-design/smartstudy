@@ -75,10 +75,16 @@ class SubjectViewModel @Inject constructor(
 
     fun onEvent(event: SubjectEvent) {
         when (event) {
-            SubjectEvent.DeleteSession -> {}
+            SubjectEvent.DeleteSession -> deleteSession()
             SubjectEvent.DeleteSubject -> deleteSuject()
             SubjectEvent.UpdateSubject -> updateSubject()
-            is SubjectEvent.onDeleteSessionButtonClick -> {}
+            is SubjectEvent.onDeleteSessionButtonClick -> {
+                _state.update {
+                    it.copy(
+                        session = event.session
+                    )
+                }
+            }
             is SubjectEvent.onGoalStudyHoursChange ->  {
                 _state.update {
                     it.copy(
@@ -112,6 +118,33 @@ class SubjectViewModel @Inject constructor(
         }
     }
 
+    private fun deleteSession() {
+        viewModelScope.launch {
+
+            try {
+                state.value.session?.let{
+                    sessionRepository.deleteSession(it)
+                }
+                _snackbarEventFlow.emit(
+                    SnackbarEvent.ShowSnackbar(
+                        message = "Session deleted successfully",
+
+                        )
+                )
+
+            }catch (e: Exception){
+                _snackbarEventFlow.emit(
+                    SnackbarEvent.ShowSnackbar(
+                        message = "Coundnt delete session. : ${e.message}",
+                        SnackbarDuration.Long
+                    )
+                )
+            }
+
+
+
+        }
+    }
     private fun updateTask(task: Task){
 
             viewModelScope.launch {

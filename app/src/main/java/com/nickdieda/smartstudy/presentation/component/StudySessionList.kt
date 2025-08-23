@@ -27,6 +27,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.nickdieda.smartstudy.R
 import com.nickdieda.smartstudy.presentation.domain.model.Session
+import com.nickdieda.smartstudy.util.changeMillisDateString
+import com.nickdieda.smartstudy.util.toHours
 
 
 fun LazyListScope.studySessionsList(
@@ -111,7 +113,7 @@ modifier=   modifier,
                 )
 
                 Text(
-                    text = "${session.date}",
+                    text = session.date.changeMillisDateString(),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -120,7 +122,7 @@ modifier=   modifier,
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = "${session.duration} hr",
+                text = "${session.duration.toHours()} hr",
                 style = MaterialTheme.typography.bodySmall
             )
             IconButton(onClick = {onDeleteIconClick()}) {
